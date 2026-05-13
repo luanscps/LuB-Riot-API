@@ -1,0 +1,57 @@
+meta {
+  name: 01 - Get Match by ID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url_regional}}{{api_prefix_match}}/matches/{{match_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:after-response {
+  const body = res.getBody();
+
+  if (res.getStatus() === 200 && body.info) {
+    const info = body.info;
+    console.log("🎮 Duração da partida:", Math.floor(info.gameDuration / 60), "min");
+    console.log("🗺️  Mapa ID:", info.mapId);
+    console.log("🏆 Modo:", info.gameMode);
+    console.log("👥 Participantes:", info.participants.length);
+
+    info.participants.forEach(function(p) {
+      const kda = ((p.kills + p.assists) / Math.max(p.deaths, 1)).toFixed(2);
+      const won = p.win ? "✅" : "❌";
+      console.log(won, p.riotIdGameName, "| KDA:", p.kills + "/" + p.deaths + "/" + p.assists, "(" + kda + ")", "| Champ:", p.championName);
+    });
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Response tem metadata e info", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("metadata");
+    expect(body).to.have.property("info");
+  });
+
+  test("info tem 10 participantes (5v5)", function() {
+    const body = res.getBody();
+    expect(body.info.participants.length).to.equal(10);
+  });
+
+  test("Tem winner definido", function() {
+    const body = res.getBody();
+    const winners = body.info.participants.filter(function(p) { return p.win; });
+    expect(winners.length).to.equal(5);
+  });
+}

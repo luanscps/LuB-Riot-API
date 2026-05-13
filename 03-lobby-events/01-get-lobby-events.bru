@@ -1,0 +1,47 @@
+meta {
+  name: 01 - Get Lobby Events by Code
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url_platform}}{{api_prefix_tournament}}/lobby-events/by-code/{{tournament_code}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:after-response {
+  const body = res.getBody();
+  if (body && body.eventList) {
+    const events = body.eventList;
+    console.log("📋 Total de eventos:", events.length);
+
+    const byType = {};
+    events.forEach(function(e) {
+      byType[e.eventType] = (byType[e.eventType] || 0) + 1;
+    });
+    console.log("📊 Eventos por tipo:", JSON.stringify(byType, null, 2));
+
+    const gameStarted = events.some(function(e) {
+      return e.eventType === "GameAllocatedToLsmEvent";
+    });
+    console.log("🎮 Partida iniciou?", gameStarted ? "SIM" : "NÃO");
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Response tem eventList", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("eventList");
+    expect(body.eventList).to.be.an("array");
+  });
+}

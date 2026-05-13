@@ -1,0 +1,58 @@
+meta {
+  name: 02 - Create Tournament
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url_platform}}{{api_prefix_tournament}}/tournaments
+  body: json
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "name": "Meu Torneio LoL - {{$timestamp}}",
+    "providerId": {{provider_id}}
+  }
+}
+
+script:pre-request {
+  // Garante que provider_id está definido antes de prosseguir
+  const providerId = bru.getEnvVar("provider_id");
+
+  if (!providerId || providerId === "") {
+    throw new Error("❌ provider_id não definido! Execute '01 - Create Provider' primeiro.");
+  }
+
+  console.log("✅ Usando provider_id:", providerId);
+}
+
+script:after-response {
+  const tournamentId = res.getBody();
+
+  if (res.getStatus() === 200 && typeof tournamentId === "number") {
+    bru.setEnvVar("tournament_id", String(tournamentId));
+    console.log("✅ tournament_id salvo:", tournamentId);
+  } else {
+    console.error("❌ Erro ao criar tournament:", res.getBody());
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Retornou tournament_id como número", function() {
+    const body = res.getBody();
+    expect(body).to.be.a("number");
+    expect(body).to.be.greaterThan(0);
+  });
+}

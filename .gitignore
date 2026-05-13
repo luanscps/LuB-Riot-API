@@ -1,0 +1,7 @@
+# Arquivos de ambiente com dados sensíveis (API keys)
+environments/stub.bru
+environments/production.bru
+environments/local.bru
+
+# Versionar apenas o template
+# environments/example.bru  <- este pode ir para o Git

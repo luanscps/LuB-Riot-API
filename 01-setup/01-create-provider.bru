@@ -1,0 +1,48 @@
+meta {
+  name: 01 - Create Provider
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url_platform}}{{api_prefix_tournament}}/providers
+  body: json
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "region": "BR",
+    "url": "{{callback_url}}"
+  }
+}
+
+script:after-response {
+  // A API retorna diretamente o providerId como integer
+  const providerId = res.getBody();
+
+  if (res.getStatus() === 200 && typeof providerId === "number") {
+    bru.setEnvVar("provider_id", String(providerId));
+    console.log("✅ provider_id salvo:", providerId);
+  } else {
+    console.error("❌ Erro ao criar provider:", res.getBody());
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Retornou provider_id como número", function() {
+    const body = res.getBody();
+    expect(body).to.be.a("number");
+    expect(body).to.be.greaterThan(0);
+  });
+}

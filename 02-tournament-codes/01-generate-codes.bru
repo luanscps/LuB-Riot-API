@@ -1,0 +1,69 @@
+meta {
+  name: 01 - Generate Tournament Codes
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url_platform}}{{api_prefix_tournament}}/codes?count=1&tournamentId={{tournament_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "mapType": "SUMMONERS_RIFT",
+    "pickType": "TOURNAMENT_DRAFT",
+    "spectatorType": "ALL",
+    "teamSize": 5,
+    "metadata": "{\"matchId\": \"{{internal_match_id}}\", \"round\": \"quarterfinal\"}"
+  }
+}
+
+script:pre-request {
+  const tournamentId = bru.getEnvVar("tournament_id");
+
+  if (!tournamentId || tournamentId === "") {
+    throw new Error("❌ tournament_id não definido! Execute '02 - Create Tournament' primeiro.");
+  }
+
+  console.log("✅ Gerando código para tournament_id:", tournamentId);
+}
+
+script:after-response {
+  const codes = res.getBody();
+
+  if (res.getStatus() === 200 && Array.isArray(codes) && codes.length > 0) {
+    bru.setEnvVar("tournament_code", codes[0]);
+    console.log("✅ tournament_code salvo:", codes[0]);
+    console.log("📋 Todos os códigos gerados:", codes);
+  } else {
+    console.error("❌ Erro ao gerar tournament codes:", res.getBody());
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Retornou array de tournament codes", function() {
+    const codes = res.getBody();
+    expect(codes).to.be.an("array");
+    expect(codes.length).to.be.greaterThan(0);
+  });
+
+  test("Cada código tem formato válido (string não vazia)", function() {
+    const codes = res.getBody();
+    codes.forEach(function(code) {
+      expect(code).to.be.a("string");
+      expect(code.length).to.be.greaterThan(10);
+    });
+  });
+}

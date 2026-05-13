@@ -1,0 +1,49 @@
+meta {
+  name: 02 - Get Tournament Code Details
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url_platform}}{{api_prefix_tournament}}/codes/{{tournament_code}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:pre-request {
+  const code = bru.getEnvVar("tournament_code");
+  if (!code || code === "") {
+    throw new Error("❌ tournament_code não definido! Execute '01 - Generate Codes' primeiro.");
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Response tem campos obrigatórios", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("code");
+    expect(body).to.have.property("gameType");
+    expect(body).to.have.property("mapType");
+    expect(body).to.have.property("pickType");
+    expect(body).to.have.property("spectators");
+    expect(body).to.have.property("teamSize");
+  });
+
+  test("mapType é SUMMONERS_RIFT", function() {
+    const body = res.getBody();
+    expect(body.mapType).to.equal("SUMMONERS_RIFT");
+  });
+
+  test("teamSize é 5", function() {
+    const body = res.getBody();
+    expect(body.teamSize).to.equal(5);
+  });
+}

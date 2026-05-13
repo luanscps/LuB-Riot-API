@@ -1,0 +1,31 @@
+meta {
+  name: 03 - Update Tournament Code
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{base_url_platform}}{{api_prefix_tournament}}/codes/{{tournament_code}}
+  body: json
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "pickType": "BLIND_PICK",
+    "spectatorType": "LOBBYONLY",
+    "mapType": "SUMMONERS_RIFT"
+  }
+}
+
+tests {
+  test("Status 204 No Content (update bem-sucedido)", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}

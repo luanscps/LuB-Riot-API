@@ -1,0 +1,46 @@
+meta {
+  name: 03 - Get Match History by PUUID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url_regional}}{{api_prefix_match}}/matches/by-puuid/{{puuid}}/ids?start=0&count=10&queue=420
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:after-response {
+  const matchIds = res.getBody();
+  if (Array.isArray(matchIds) && matchIds.length > 0) {
+    bru.setEnvVar("match_id", matchIds[0]);
+    console.log("✅ match_id mais recente salvo:", matchIds[0]);
+    console.log("📋 Últimas partidas:", matchIds);
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Retornou array de match IDs", function() {
+    const body = res.getBody();
+    expect(body).to.be.an("array");
+  });
+
+  test("Cada match ID tem prefixo BR1_", function() {
+    const body = res.getBody();
+    if (body.length > 0) {
+      body.forEach(function(id) {
+        expect(id).to.be.a("string");
+        expect(id).to.include("BR1_");
+      });
+    }
+  });
+}

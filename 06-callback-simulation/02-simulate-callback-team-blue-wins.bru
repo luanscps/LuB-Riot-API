@@ -1,0 +1,35 @@
+meta {
+  name: 02 - Simulate Callback (Cenário Blue Side Wins)
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/api/tournament/callback
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "startTime": 1715000000000,
+    "shortCode": "{{tournament_code}}",
+    "metaData": "{\"matchId\": \"{{internal_match_id}}\", \"expectedWinner\": \"blue\"}",
+    "gameId": 9999999999,
+    "gameName": "teambuilder-match-9999999999",
+    "gameType": "Practice",
+    "gameMap": 11,
+    "gameMode": "CLASSIC",
+    "region": "BR1"
+  }
+}
+
+tests {
+  test("Backend aceitou o callback", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

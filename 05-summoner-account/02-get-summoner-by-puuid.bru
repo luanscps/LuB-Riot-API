@@ -1,0 +1,47 @@
+meta {
+  name: 02 - Get Summoner by PUUID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url_platform}}{{api_prefix_summoner}}/summoners/by-puuid/{{puuid}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:after-response {
+  const body = res.getBody();
+
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("summoner_id", body.id);
+    console.log("✅ summoner_id salvo:", body.id);
+    console.log("📊 Nível:", body.summonerLevel);
+    console.log("🖼️  Profile Icon ID:", body.profileIconId);
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Response tem campos do summoner", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("id");
+    expect(body).to.have.property("accountId");
+    expect(body).to.have.property("puuid");
+    expect(body).to.have.property("summonerLevel");
+    expect(body).to.have.property("profileIconId");
+  });
+
+  test("summonerLevel é positivo", function() {
+    const body = res.getBody();
+    expect(body.summonerLevel).to.be.greaterThan(0);
+  });
+}

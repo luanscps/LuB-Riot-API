@@ -1,0 +1,35 @@
+meta {
+  name: 01 - Get Active Game by PUUID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url_platform}}{{api_prefix_spectator}}/active-games/by-summoner/{{puuid}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:after-response {
+  if (res.getStatus() === 200) {
+    const body = res.getBody();
+    console.log("🎮 Partida em andamento encontrada!");
+    console.log("   gameId:", body.gameId);
+    console.log("   Modo:", body.gameMode);
+    console.log("   Duração:", Math.floor(body.gameLength / 60), "min");
+  } else if (res.getStatus() === 404) {
+    console.log("💤 Jogador não está em partida no momento.");
+  }
+}
+
+tests {
+  test("Status 200 (em partida) ou 404 (não em partida)", function() {
+    const status = res.getStatus();
+    expect([200, 404]).to.include(status);
+  });
+}

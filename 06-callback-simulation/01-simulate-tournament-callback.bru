@@ -1,0 +1,44 @@
+meta {
+  name: 01 - Simulate Tournament Callback (POST no seu backend)
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/api/tournament/callback
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "startTime": 1715000000000,
+    "shortCode": "{{tournament_code}}",
+    "metaData": "{\"matchId\": \"{{internal_match_id}}\", \"round\": \"quarterfinal\"}",
+    "gameId": 7654321098,
+    "gameName": "teambuilder-match-7654321098",
+    "gameType": "Practice",
+    "gameMap": 11,
+    "gameMode": "CLASSIC",
+    "region": "BR1"
+  }
+}
+
+script:after-response {
+  if (res.getStatus() === 200) {
+    console.log("✅ Callback processado com sucesso pelo backend!");
+    console.log("📦 Resposta:", JSON.stringify(res.getBody(), null, 2));
+  } else {
+    console.error("❌ Backend retornou erro:", res.getStatus(), res.getBody());
+  }
+}
+
+tests {
+  test("Backend processou o callback (status 200)", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

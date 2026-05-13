@@ -1,0 +1,42 @@
+meta {
+  name: 03 - Get League Entries (Ranked Info)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url_platform}}/lol/league/v4/entries/by-summoner/{{summoner_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:after-response {
+  const entries = res.getBody();
+
+  if (Array.isArray(entries)) {
+    entries.forEach(function(entry) {
+      if (entry.queueType === "RANKED_SOLO_5x5") {
+        const wr = ((entry.wins / (entry.wins + entry.losses)) * 100).toFixed(1);
+        console.log("🏆 Ranked Solo:");
+        console.log("   Tier:", entry.tier, entry.rank, "-", entry.leaguePoints, "LP");
+        console.log("   W/L:", entry.wins + "W / " + entry.losses + "L (" + wr + "% WR)");
+      }
+    });
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Retornou array de league entries", function() {
+    const body = res.getBody();
+    expect(body).to.be.an("array");
+  });
+}

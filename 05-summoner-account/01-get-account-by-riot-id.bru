@@ -1,0 +1,45 @@
+meta {
+  name: 01 - Get Account by Riot ID (gameName + tagLine)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url_regional}}{{api_prefix_account}}/accounts/by-riot-id/{{game_name}}/{{tag_line}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Riot-Token: {{riot_api_key}}
+  Accept: application/json
+}
+
+script:after-response {
+  const body = res.getBody();
+
+  if (res.getStatus() === 200 && body.puuid) {
+    bru.setEnvVar("puuid", body.puuid);
+    console.log("✅ PUUID salvo:", body.puuid);
+    console.log("🆔 Riot ID:", body.gameName + "#" + body.tagLine);
+  }
+}
+
+tests {
+  test("Status 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Response tem puuid", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("puuid");
+    expect(body.puuid).to.be.a("string");
+    expect(body.puuid.length).to.equal(78);
+  });
+
+  test("Response tem gameName e tagLine", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("gameName");
+    expect(body).to.have.property("tagLine");
+  });
+}
